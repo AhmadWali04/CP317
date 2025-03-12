@@ -1,0 +1,8 @@
+Get location of the user:
+location api will update the location class
+search class will use the user & location class to search for resturants nearby
+
+Getting random resturaunts from google maps:
+https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=43.24,-79.89&radius=5000&type=restaurant&key=YOUR_API_KEY
+
+Database:
