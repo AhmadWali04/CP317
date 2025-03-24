@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Random Restaurant Picker - Login</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .container { max-width: 400px; margin: auto; }
+    .hidden { display: none; }
+    input, button { width: 100%; padding: 10px; margin: 5px 0; }
+    #switchAuth { text-align: center; margin-top: 10px; cursor: pointer; color: blue; }
+    .error { color: red; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2 id="formTitle">Login to Random Restaurant Picker</h2>
+
+    <div id="errorMsg" class="error"></div>
+
+    <form id="authForm" onsubmit="handleAuth(event)">
+      <input type="text" id="username" placeholder="Username" required />
+      <input type="password" id="password" placeholder="Password" required />
+      <input type="email" id="email" placeholder="Email (for registration)" class="hidden" />
+      <button type="submit" id="submitBtn">Login</button>
+    </form>
+
+    <div id="switchAuth" onclick="toggleForm()">Don't have an account? Register here</div>
+  </div>
+
+  <script>
+    let isRegistering = false;
+
+    function toggleForm() {
+      isRegistering = !isRegistering;
+
+      document.getElementById("formTitle").textContent = isRegistering
+        ? "Register for Random Restaurant Picker"
+        : "Login to Random Restaurant Picker";
+
+      document.getElementById("submitBtn").textContent = isRegistering ? "Register" : "Login";
+
+      document.getElementById("email").classList.toggle("hidden");
+      document.getElementById("switchAuth").textContent = isRegistering
+        ? "Already have an account? Login here"
+        : "Don't have an account? Register here";
+
+      document.getElementById("errorMsg").textContent = ""; // clear errors
+    }
+
+    function handleAuth(e) {
+      e.preventDefault();
+
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const email = document.getElementById("email").value.trim();
+
+      if (!username || !password || (isRegistering && !email)) {
+        document.getElementById("errorMsg").textContent = "Please fill in all required fields.";
+        return;
+      }
+
+      const endpoint = isRegistering ? "/register" : "/login";
+      const payload = isRegistering
+        ? { username, password, email }
+        : { username, password };
+
+      fetch(`http://localhost:8080/restaurantProject${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          // Replace with redirect to dashboard or search UI
+          window.location.href = "dashboard.html"; // placeholder
+        } else {
+          document.getElementById("errorMsg").textContent = data.message || "Authentication failed.";
+        }
+      })
+      .catch(err => {
+        console.error("Auth error:", err);
+        document.getElementById("errorMsg").textContent = "Something went wrong. Please try again.";
+      });
+    }
+  </script>
+
+</body>
+</html>
