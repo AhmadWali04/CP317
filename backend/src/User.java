@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 
-public class user{
+public class User{
 
     /*
      * CREATING THE OBJECT CHARACTERISTICS
@@ -25,7 +25,7 @@ public class user{
      * Contributed By: Ahmad W
      */
 
-    public user(int id, String name, float radius,String[] searchHistory){
+    public User(int id, String name, float radius,String[] searchHistory){
         this.id = id;
         this.name = name;
         this.searchHistory = searchHistory;
