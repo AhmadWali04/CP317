@@ -7,6 +7,8 @@
 <p>Click the button to get your coordinates.</p>
 
 <button onclick="getLocation()">Click here to scan location</button>
+<!--this displays the user location-->
+<div id="demo"></div>
 
 <script>
 
@@ -25,9 +27,12 @@ function sendLocation(position) {
   let latitude = position.coords.latitude;
   let longitude = position.coords.longitude;
   x.innerHTML = "Latitude: " + latitude + "<br>Longitude: " + longitude;
-  fetch('http://localhost:8080/LocalServer', {
+  fetch('http://localhost:8080/restaurantProject/LocalServer', {
     method: "POST",
-    body: JSON.stringify({latitude:latitude, longitude: longitude})
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({latitude: latitude, longitude: longitude})
   })
     //converts the data into a string, Logs response and catches errors
     .then(response => response.text())
@@ -38,4 +43,3 @@ function sendLocation(position) {
 
 </body>
 </html>
-
