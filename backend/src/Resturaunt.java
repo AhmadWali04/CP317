@@ -1,28 +1,28 @@
-package Backend;
+package backend;
 
 import java.util.ArrayList;
 import java.util.List;
 
 //should also implement the location class
-public class resturaunt{
+public class Resturaunt{
     private int id;
     private String name;
     private List<String> typesOfFood;
     private float maxPrice;
 
 
-    public resturaunt(int id, String name,List<String> typesOfFoods){
+    public Resturaunt(int id, String name,List<String> typesOfFoods){
         this.id = id;
         this.name = name;
         this.typesOfFood = typesOfFoods;
     }
 
     //action methods
-    public List<Strings> addTypesofFoods(){
+    public List<String> addTypesofFoods(){
 
     }
 
-    public List<Strings> removeTypesofFoods(){
+    public List<String> removeTypesofFoods(){
 
     }
 
@@ -55,7 +55,4 @@ public class resturaunt{
     public float getMaxPrice(){
         return this.maxPrice;
     }
-
-
-    
 }
