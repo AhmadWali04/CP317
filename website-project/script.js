@@ -1,5 +1,7 @@
-// Run the login check when page loads
-checkUserLoginStatus();document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
+    // Run the login check when page loads
+    checkUserLoginStatus();
+    
     // Initialize navigation active state
     const navLinks = document.querySelectorAll('.nav-links a');
     
@@ -115,9 +117,10 @@ checkUserLoginStatus();document.addEventListener('DOMContentLoaded', function() 
                     dropdown.appendChild(optionElement);
                 });
                 
-                // Position dropdown below filter
+                // Add dropdown to document body
                 document.body.appendChild(dropdown);
                 
+                // Position dropdown below filter
                 const filterRect = this.getBoundingClientRect();
                 dropdown.style.top = (filterRect.bottom + window.scrollY) + 'px';
                 dropdown.style.left = (filterRect.left + window.scrollX) + 'px';
@@ -134,27 +137,55 @@ checkUserLoginStatus();document.addEventListener('DOMContentLoaded', function() 
     // Get Location button click event
     const getLocationBtn = document.querySelector('.btn-location');
     
-    getLocationBtn.addEventListener('click', function() {
-        // This is just a placeholder for future functionality
-        alert('Get location functionality will be implemented in the next phase.');
-        // In a real implementation, this would use the browser's geolocation API
-        // navigator.geolocation.getCurrentPosition()
-    });
+    if (getLocationBtn) {
+        getLocationBtn.addEventListener('click', function() {
+            if (navigator.geolocation) {
+                getLocationBtn.textContent = 'Getting location...';
+                getLocationBtn.disabled = true;
+                
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        // Success - in a real app, we would use a geocoding service to get the address
+                        const locationInput = document.querySelector('.location-input');
+                        if (locationInput) {
+                            locationInput.value = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
+                        }
+                        
+                        // Reset button
+                        getLocationBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Get Location';
+                        getLocationBtn.disabled = false;
+                    },
+                    function(error) {
+                        // Error
+                        alert(`Could not get your location: ${error.message}`);
+                        
+                        // Reset button
+                        getLocationBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Get Location';
+                        getLocationBtn.disabled = false;
+                    }
+                );
+            } else {
+                alert('Geolocation is not supported by your browser');
+            }
+        });
+    }
 
     // Find Restaurant button click event
     const findRestaurantBtn = document.querySelector('.search-container .btn-primary');
     const locationInput = document.querySelector('.location-input');
     
-    findRestaurantBtn.addEventListener('click', function() {
-        if (locationInput.value.trim() === '') {
-            alert('Please enter your location to find restaurants.');
-            locationInput.focus();
-        } else {
-            // In a real app, this would trigger the search functionality
-            alert(`Searching for restaurants near ${locationInput.value}...`);
-            // You would typically redirect to a results page or show results here
-        }
-    });
+    if (findRestaurantBtn && locationInput) {
+        findRestaurantBtn.addEventListener('click', function() {
+            if (locationInput.value.trim() === '') {
+                alert('Please enter your location to find restaurants.');
+                locationInput.focus();
+            } else {
+                // In a real app, this would trigger the search functionality
+                alert(`Searching for restaurants near ${locationInput.value}...`);
+                // You would typically redirect to a results page or show results here
+            }
+        });
+    }
 
     // Check if user is already logged in and update UI accordingly
     function checkUserLoginStatus() {
@@ -239,24 +270,29 @@ checkUserLoginStatus();document.addEventListener('DOMContentLoaded', function() 
                     const userMenuButton = document.querySelector('.btn-user');
                     const userDropdown = document.querySelector('.user-dropdown');
                     
-                    userMenuButton.addEventListener('click', function() {
-                        userDropdown.classList.toggle('active');
-                    });
+                    if (userMenuButton && userDropdown) {
+                        userMenuButton.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            userDropdown.classList.toggle('active');
+                        });
 
-                    // Close dropdown when clicking outside
-                    document.addEventListener('click', function(e) {
-                        if (!userMenuButton.contains(e.target) && !userDropdown.contains(e.target)) {
-                            userDropdown.classList.remove('active');
+                        // Close dropdown when clicking outside
+                        document.addEventListener('click', function(e) {
+                            if (!userMenuButton.contains(e.target) && !userDropdown.contains(e.target)) {
+                                userDropdown.classList.remove('active');
+                            }
+                        });
+
+                        // Handle logout
+                        const logoutButton = document.getElementById('logout-button');
+                        if (logoutButton) {
+                            logoutButton.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                localStorage.removeItem('currentUser');
+                                window.location.reload();
+                            });
                         }
-                    });
-
-                    // Handle logout
-                    const logoutButton = document.getElementById('logout-button');
-                    logoutButton.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        localStorage.removeItem('currentUser');
-                        window.location.reload();
-                    });
+                    }
                 }
 
                 // Update CTA button text
@@ -289,16 +325,32 @@ checkUserLoginStatus();document.addEventListener('DOMContentLoaded', function() 
     // CTA button redirect
     const ctaButton = document.querySelector('.btn-cta');
     
-    ctaButton.addEventListener('click', function() {
-        // Check if user is logged in
-        const currentUser = localStorage.getItem('currentUser');
-        if (currentUser) {
-            // Redirect to restaurant search page (will be implemented later)
-            alert('Taking you to find restaurants...');
-            // This would navigate to the search page in a full implementation
-        } else {
-            // Redirect to sign-up page
-            window.location.href = 'signup.html';
+    if (ctaButton) {
+        ctaButton.addEventListener('click', function() {
+            // Check if user is logged in
+            const currentUser = localStorage.getItem('currentUser');
+            if (currentUser) {
+                // Redirect to restaurant search page (will be implemented later)
+                alert('Taking you to find restaurants...');
+                // This would navigate to the search page in a full implementation
+            } else {
+                // Redirect to sign-up page
+                window.location.href = 'signup.html';
+            }
+        });
+    }
+});
+
+// Add CSS styles for filter dropdown
+document.addEventListener('DOMContentLoaded', function() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .filter-dropdown {
+            display: block;
         }
-    });
+        .filter-option:hover {
+            background-color: #f8f9fa;
+        }
+    `;
+    document.head.appendChild(style);
 });
