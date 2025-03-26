@@ -1,4 +1,5 @@
-document.addEventListener('DOMContentLoaded', function() {
+// Run the login check when page loads
+checkUserLoginStatus();document.addEventListener('DOMContentLoaded', function() {
     // Initialize navigation active state
     const navLinks = document.querySelectorAll('.nav-links a');
     
@@ -130,6 +131,16 @@ document.addEventListener('DOMContentLoaded', function() {
         filters.forEach(filter => filter.classList.remove('active'));
     });
 
+    // Get Location button click event
+    const getLocationBtn = document.querySelector('.btn-location');
+    
+    getLocationBtn.addEventListener('click', function() {
+        // This is just a placeholder for future functionality
+        alert('Get location functionality will be implemented in the next phase.');
+        // In a real implementation, this would use the browser's geolocation API
+        // navigator.geolocation.getCurrentPosition()
+    });
+
     // Find Restaurant button click event
     const findRestaurantBtn = document.querySelector('.search-container .btn-primary');
     const locationInput = document.querySelector('.location-input');
@@ -142,22 +153,6 @@ document.addEventListener('DOMContentLoaded', function() {
             // In a real app, this would trigger the search functionality
             alert(`Searching for restaurants near ${locationInput.value}...`);
             // You would typically redirect to a results page or show results here
-        }
-    });
-
-    // CTA button redirect
-    const ctaButton = document.querySelector('.btn-cta');
-    
-    ctaButton.addEventListener('click', function() {
-        // Check if user is logged in
-        const currentUser = localStorage.getItem('currentUser');
-        if (currentUser) {
-            // Redirect to restaurant search page (will be implemented later)
-            alert('Taking you to find restaurants...');
-            // This would navigate to the search page in a full implementation
-        } else {
-            // Redirect to sign-up page
-            window.location.href = 'signup.html';
         }
     });
 
@@ -273,9 +268,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Run the login check when page loads
-    checkUserLoginStatus();
-
     // Smooth scrolling for anchor links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function(e) {
@@ -292,5 +284,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
         });
+    });
+
+    // CTA button redirect
+    const ctaButton = document.querySelector('.btn-cta');
+    
+    ctaButton.addEventListener('click', function() {
+        // Check if user is logged in
+        const currentUser = localStorage.getItem('currentUser');
+        if (currentUser) {
+            // Redirect to restaurant search page (will be implemented later)
+            alert('Taking you to find restaurants...');
+            // This would navigate to the search page in a full implementation
+        } else {
+            // Redirect to sign-up page
+            window.location.href = 'signup.html';
+        }
     });
 });
