@@ -187,7 +187,28 @@ nav {
     font-size: 1rem;
 }
 
-.search-container .btn {
+.btn-location {
+    background-color: var(--light-color);
+    color: var(--dark-color);
+    border: none;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    border-radius: 0;
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+}
+
+.btn-location i {
+    margin-right: 0.5rem;
+    color: var(--primary-color);
+}
+
+.btn-location:hover {
+    background-color: #e9ecef;
+}
+
+.search-container .btn-primary {
     border-radius: 0 4px 4px 0;
 }
 
