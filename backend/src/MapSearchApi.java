@@ -2,34 +2,94 @@ import java.io.*; //for handling input/output
 import java.net.HttpURLConnection; //for making HTTP requests
 import java.net.URL; //for handling URLs
 import java.util.Random;
+import java.util.Scanner;//used in main() for testing, maybe taken out if main() is removed.
 import com.google.gson.Gson;
 import org.json.JSONObject;
 import org.json.JSONArray;
+import java.net.URLEncoder;//to encode address properly for legacy places API textsearch
 
 public class MapSearchApi {
     private static final String key = "AIzaSyDGYZDBalEh2oeJP6SnU6mffWQNj4FPDt0";
-    static double x = 43.24; //latitude
-    static double y = -79.89; //longitude
-    static long rad = 5000; //radius
-    static String filter = "\"chinese_restaurant\",\"korean_restaurant\"";
+    private static final String key2 = "AIzaSyAl4OsSbGOk8wIOCrwVP7gAkq-R3IYMti0";// for old places api, for text search
+    static double x = 43.24; //default/placeholder latitude for testing
+    static double y = -79.89; //default/placeholder longitude for testing
+    static long rad = 5000; //radius in metres
+    static String filter = "\"chinese_restaurant\",\"korean_restaurant\""; //to be changed base on the user input on website
 
     public static void main(String[] args) {
-        Location userLocation = StoredLocationFetch();
-        if (userLocation == null) { // error: could not get user location from localServer
-            System.out.println("Location data not available");
-            return;
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Enter address (or Enter empty to use stored location):");
+        String userAddress = scanner.nextLine().trim();
+
+        double latitude, longitude;
+        if(!userAddress.isEmpty()) {
+            double[]coords = AddressToCoords(userAddress);
+            if (coords == null) { //CASE 1: address is input from text box, fetch coords with textSearch from Places API
+                System.out.println("could not retrieve coordinates for the inputted address.");
+                return;
+            }
+            latitude = coords[0];
+            longitude = coords[1];
+        } else { //CASE 2: address not entered, use grabbed location thats stored in localServer
+            Location userLocation = StoredLocationFetch();
+            if (userLocation == null){
+                System.out.println("user location data not available.");
+                return;
+            }
+            latitude = userLocation.getLatitude();
+            longitude = userLocation.getLongitude();
         }
-        double latitude = userLocation.getLatitude();
-        double longitude = userLocation.getLongitude();
-        System.out.println("location retreived: latitude= " + latitude + ",longitude= " + longitude);
+        //always call search, despite origin of the user's latitude/longitude
+        System.out.println("location retreived: latitude= " + latitude + ", longitude= " + longitude);
         String response = search(latitude, longitude);
-        //print returned json file converted into a string
+        //always parse to return 1 random restaurant fitting parameters
         if (response != null) {
-            parseRandom(response); // parsing method
+            parseRandom(response);
         } else {
-            System.out.println("API returned no results");
+            System.out.println("API returned no results.");
         }
-        // System.out.println("Api Response:\n" + response);
+    }
+
+    //front end should go here to get user location from an inputed address. this converts the input to latitude/longitude to work with the search().
+    public static double[] AddressToCoords(String address) {
+        try {
+            String addressEncoded = URLEncoder.encode(address, "UTF-8");
+            String urlString = "https://maps.googleapis.com/maps/api/place/textsearch/json?query=" + addressEncoded + "&key=" + key2;
+            URL url = new URL(urlString);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            //reader
+            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"));
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+            reader.close();
+            //parse json repsonse
+            JSONObject jsonObject = new JSONObject(response.toString());
+            JSONArray results = jsonObject.optJSONArray("results");
+            if (results != null && results.length() > 0) {
+                JSONObject first = results.getJSONObject(0);
+                JSONObject location = first.getJSONObject("geometry").getJSONObject("location");
+                double lat = location.getDouble("lat");
+                double lng = location.getDouble("lng");
+                String name = first.optString("name", "Unkown");
+                String addressF = first.optString("formatted_address", "No address");
+                System.out.println("name: " + name);
+                System.out.println("address: " + addressF);
+                //System.out.println("latitude: " + lat); // for testing
+                //System.out.println("longitude: " + lng); // ^
+                return new double[]{lat, lng};
+            } else {
+                System.out.println("no results found for query/address.");
+                return null;
+            }
+        } catch (Exception e) {
+            System.out.println("error during legacy placesAPI text search:");
+            e.printStackTrace();
+            return null;
+        }
     }
 
     //get the stored location data from Location.java
