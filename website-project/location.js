@@ -69,23 +69,44 @@ class LocationService {
     handleLocationSuccess(position) {
         const { latitude, longitude } = position.coords;
 
-        // Send location to local server
-        this.sendLocationToServer(latitude, longitude)
-            .then(() => {
-                // Update input with coordinates
+        // Set button to indicate we're processing
+        this.setButtonState('processing');
+        
+        // First try to get the actual address via reverse geocoding
+        this.reverseGeocode(latitude, longitude)
+            .then(address => {
+                // Then send location to server (regardless of geocoding result)
+                return this.sendLocationToServer(latitude, longitude)
+                    .then(() => {
+                        // If we have a resolved address, use it
+                        if (this.locationInput) {
+                            // If we got a proper address, use it; otherwise fall back to coordinates
+                            if (address) {
+                                this.locationInput.value = address;
+                            } else {
+                                this.locationInput.value = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+                            }
+                        }
+                        this.setButtonState('success');
+                    });
+            })
+            .catch(error => {
+                console.error('Location handling error:', error);
+                // Fall back to coordinates if geocoding fails
                 if (this.locationInput) {
                     this.locationInput.value = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
                 }
-
-                // Optional: Reverse geocoding
-                this.reverseGeocode(latitude, longitude);
-
-                this.setButtonState('success');
-            })
-            .catch(error => {
-                console.error('Server location send error:', error);
-                this.showError('Could not send location to server');
-                this.setButtonState('error');
+                
+                // Still try to send to server
+                this.sendLocationToServer(latitude, longitude)
+                    .then(() => {
+                        this.setButtonState('success');
+                    })
+                    .catch(serverError => {
+                        console.error('Server location send error:', serverError);
+                        this.showError('Could not send location to server');
+                        this.setButtonState('error');
+                    });
             });
     }
 
@@ -210,25 +231,51 @@ class LocationService {
         this.setButtonState('error');
     }
 
-    // Optional: Reverse Geocoding (requires Google Maps API)
+    // Reverse Geocoding (converts coordinates to human-readable address)
     reverseGeocode(latitude, longitude) {
-        // Note: Requires a Google Maps API key
-        const apiKey = 'AIzaSyDGYZDBalEh2oeJP6SnU6mffWQNj4FPDt0';
-        const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`;
-        
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                if (data.results && data.results.length > 0) {
-                    const address = data.results[0].formatted_address;
-                    if (this.locationInput) {
-                        this.locationInput.value = address;
+        return new Promise((resolve, reject) => {
+            // Use Google Maps Geocoding API
+            const apiKey = 'AIzaSyDGYZDBalEh2oeJP6SnU6mffWQNj4FPDt0';
+            const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`;
+            
+            console.log('Sending geocoding request to:', url);
+            
+            fetch(url)
+                .then(response => {
+                    console.log('Geocoding response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`Geocoding API response error: ${response.status} ${response.statusText}`);
                     }
-                }
-            })
-            .catch(error => {
-                console.error('Reverse geocoding error:', error);
-            });
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Geocoding complete response:', data);
+                    
+                    if (data.status === 'OK' && data.results && data.results.length > 0) {
+                        // Get the most accurate address (first result)
+                        const address = data.results[0].formatted_address;
+                        console.log('Found address:', address);
+                        
+                        // Directly set the input value here as a safeguard
+                        if (this.locationInput) {
+                            console.log('Setting input value to address');
+                            this.locationInput.value = address;
+                        }
+                        
+                        resolve(address);
+                    } else {
+                        console.warn('No address found or error in geocoding results', data);
+                        if (data.error_message) {
+                            console.error('API error message:', data.error_message);
+                        }
+                        resolve(null); // Resolve with null if no address found
+                    }
+                })
+                .catch(error => {
+                    console.error('Reverse geocoding error:', error);
+                    reject(error);
+                });
+        });
     }
 
     // Show error message
@@ -273,6 +320,10 @@ class LocationService {
         switch (state) {
             case 'loading':
                 this.locationBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting location...';
+                this.locationBtn.disabled = true;
+                break;
+            case 'processing':
+                this.locationBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing location...';
                 this.locationBtn.disabled = true;
                 break;
             case 'success':
