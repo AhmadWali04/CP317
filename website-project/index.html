@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+<head> 
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDGYZDBalEh2oeJP6SnU6mffWQNj4FPDt0&libraries=places&loading=async" defer></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restaurant Roulette</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="address-autocomplete.js"></script>
 </head>
 <body>
     <header>
@@ -37,10 +39,10 @@
                     <button class="btn btn-primary">Find A Restaurant</button>
                 </div>
                 <div class="quick-filters">
-                    <span class="filter"><i class="fas fa-utensils"></i> Cuisine</span>
-                    <span class="filter"><i class="fas fa-dollar-sign"></i> Price</span>
-                    <span class="filter"><i class="fas fa-map-marker-alt"></i> Distance</span>
-                    <span class="filter"><i class="fas fa-star"></i> Rating</span>
+                    <span class="filter" data-filter-type="cuisine"><i class="fas fa-utensils"></i> Cuisine</span>
+                    <span class="filter" data-filter-type="price"><i class="fas fa-dollar-sign"></i> Price</span>
+                    <span class="filter" data-filter-type="distance"><i class="fas fa-map-marker-alt"></i> Distance</span>
+                    <span class="filter" data-filter-type="rating"><i class="fas fa-star"></i> Rating</span>
                 </div>
                 <div class="filter-instructions">
                     <small>Click on filters to select your preferences</small>

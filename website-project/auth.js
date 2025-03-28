@@ -25,7 +25,10 @@ document.addEventListener('DOMContentLoaded', function() {
         confirmPassword: 'Passwords do not match',
         firstName: 'First name is required',
         lastName: 'Last name is required',
-        terms: 'You must agree to the Terms of Service and Privacy Policy'
+        terms: 'You must agree to the Terms of Service and Privacy Policy',
+        noAccount: 'No account found with this email. Please sign up first.',
+        wrongPassword: 'Incorrect password. Please try again.',
+        accountExists: 'An account with this email already exists. Please log in instead.'
     };
 
     // Login form validation
@@ -59,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // If valid, simulate login
             if (isValid) {
-                simulateLogin(emailInput.value);
+                simulateLogin(emailInput.value, passwordInput.value);
             }
         });
     }
@@ -141,7 +144,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // If valid, simulate registration
             if (isValid) {
-                simulateRegistration(firstNameInput.value, lastNameInput.value, emailInput.value);
+                simulateRegistration(firstNameInput.value, lastNameInput.value, emailInput.value, passwordInput.value);
             }
         });
     }
@@ -161,7 +164,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Simulate login (would be replaced with actual API call)
-    function simulateLogin(email) {
+    function simulateLogin(email, password) {
         // Show loading state
         const loginButton = loginForm.querySelector('.btn-auth');
         const originalText = loginButton.textContent;
@@ -170,13 +173,45 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Simulate API call with timeout
         setTimeout(() => {
-            // Store user info in localStorage (in a real app, you'd use a token from the server)
-            const user = {
-                email: email,
-                name: email.split('@')[0], // Use part of email as name for demo
-                isLoggedIn: true,
-                loginTime: new Date().toISOString()
-            };
+            // Check if user exists (search in localStorage for demo purposes)
+            const allUsers = JSON.parse(localStorage.getItem('allUsers') || '[]');
+            const userExists = allUsers.some(user => user.email === email);
+            
+            if (!userExists) {
+                // User doesn't exist - show error
+                loginButton.textContent = originalText;
+                loginButton.disabled = false;
+                
+                const emailInput = document.getElementById('email');
+                const emailError = document.getElementById('email-error');
+                showError(emailInput, emailError, errorMessages.noAccount);
+                return;
+            }
+            
+            // In a real app, you would verify the password here
+            // For demo purposes, we'll just get the user and proceed
+            const user = allUsers.find(user => user.email === email);
+            
+            // Verify password (simple check for demo)
+            if (user.password !== password) {
+                loginButton.textContent = originalText;
+                loginButton.disabled = false;
+                
+                const passwordInput = document.getElementById('password');
+                const passwordError = document.getElementById('password-error');
+                showError(passwordInput, passwordError, errorMessages.wrongPassword);
+                return;
+            }
+            
+            // Update login state
+            user.isLoggedIn = true;
+            user.loginTime = new Date().toISOString();
+            
+            // Update user in allUsers
+            const updatedUsers = allUsers.map(u => u.email === email ? user : u);
+            localStorage.setItem('allUsers', JSON.stringify(updatedUsers));
+            
+            // Set current user
             localStorage.setItem('currentUser', JSON.stringify(user));
             
             // Redirect to home page
@@ -185,7 +220,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Simulate registration (would be replaced with actual API call)
-    function simulateRegistration(firstName, lastName, email) {
+    function simulateRegistration(firstName, lastName, email, password) {
         // Show loading state
         const signupButton = signupForm.querySelector('.btn-auth');
         const originalText = signupButton.textContent;
@@ -194,17 +229,39 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Simulate API call with timeout
         setTimeout(() => {
-            // Store user info in localStorage (in a real app, you'd use a token from the server)
+            // Check if user already exists
+            const allUsers = JSON.parse(localStorage.getItem('allUsers') || '[]');
+            const userExists = allUsers.some(user => user.email === email);
+            
+            if (userExists) {
+                // User already exists - show error
+                signupButton.textContent = originalText;
+                signupButton.disabled = false;
+                
+                const emailInput = document.getElementById('signup-email');
+                const emailError = document.getElementById('signup-email-error');
+                showError(emailInput, emailError, errorMessages.accountExists);
+                return;
+            }
+            
+            // Create user record
             const user = {
                 email: email,
+                password: password, // In a real app, this would be hashed
                 firstName: firstName,
                 lastName: lastName,
                 fullName: `${firstName} ${lastName}`,
                 isLoggedIn: true,
                 registrationTime: new Date().toISOString()
             };
-            localStorage.setItem('currentUser', JSON.stringify(user));
             
+            // Add to users collection
+            allUsers.push(user);
+            localStorage.setItem('allUsers', JSON.stringify(allUsers));
+            
+            // Set as current user
+            localStorage.setItem('currentUser', JSON.stringify(user));
+
             // Show success message and replace form
             const successMessage = document.createElement('div');
             successMessage.className = 'success-message visible';
@@ -261,6 +318,21 @@ document.addEventListener('DOMContentLoaded', function() {
             if (logoutButton) {
                 logoutButton.addEventListener('click', function(e) {
                     e.preventDefault();
+                    
+                    // Update user's isLoggedIn state in allUsers
+                    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+                    if (currentUser && currentUser.email) {
+                        const allUsers = JSON.parse(localStorage.getItem('allUsers') || '[]');
+                        const updatedUsers = allUsers.map(user => {
+                            if (user.email === currentUser.email) {
+                                user.isLoggedIn = false;
+                            }
+                            return user;
+                        });
+                        localStorage.setItem('allUsers', JSON.stringify(updatedUsers));
+                    }
+                    
+                    // Remove current user
                     localStorage.removeItem('currentUser');
                     window.location.reload();
                 });

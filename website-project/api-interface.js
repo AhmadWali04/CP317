@@ -1,5 +1,4 @@
-// This file should be named api-interface.js
-// It provides a JavaScript interface to the Java backend
+// Enhanced API interface with better error handling and filter processing
 
 class RestaurantAPI {
     constructor() {
@@ -16,6 +15,8 @@ class RestaurantAPI {
      */
     async findRandomRestaurant(params) {
         try {
+            console.log('findRandomRestaurant called with params:', params);
+            
             // Determine if location is coordinates or address
             let endpoint;
             let requestData = {};
@@ -46,25 +47,148 @@ class RestaurantAPI {
                 };
             }
             
+            console.log('API endpoint:', endpoint);
+            console.log('Request data:', JSON.stringify(requestData));
+            
             // Make POST request to the appropriate endpoint
-            const response = await fetch(this.baseUrl + endpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(requestData)
-            });
-            
-            if (!response.ok) {
-                throw new Error(`API request failed with status: ${response.status}`);
+            try {
+                const response = await fetch(this.baseUrl + endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error(`API request failed with status: ${response.status}`, errorText);
+                    throw new Error(`API request failed with status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('API response data:', data);
+                return data;
+            } catch (fetchError) {
+                console.error('Fetch error:', fetchError);
+                
+                // Check if Java backend is running or call fallback function
+                const backendAvailable = await this.#checkBackendAvailability();
+                
+                if (!backendAvailable) {
+                    console.warn('Backend server is not available, falling back to external API');
+                    return await this.#fallbackToExternalAPI(params);
+                }
+                
+                throw fetchError;
             }
-            
-            const data = await response.json();
-            return data;
         } catch (error) {
             console.error('Error in findRandomRestaurant:', error);
             throw error;
         }
+    }
+    
+    /**
+     * Check if backend server is available
+     * @private
+     * @returns {Promise<boolean>} - Whether the backend is available
+     */
+    async #checkBackendAvailability() {
+        try {
+            const response = await fetch(`${this.baseUrl}/getLocation`, {
+                method: 'GET',
+                // Add a short timeout to avoid long waiting times
+                signal: AbortSignal.timeout(2000)
+            });
+            return response.ok;
+        } catch (error) {
+            console.warn('Backend availability check failed:', error);
+            return false;
+        }
+    }
+    
+    /**
+     * Fallback to an external API if our backend is not available
+     * This is a simplified mock for demonstration
+     * @private
+     * @param {Object} params - Search parameters
+     * @returns {Promise<Object>} - Restaurant data
+     */
+    async #fallbackToExternalAPI(params) {
+        console.log('Using external API fallback with params:', params);
+        
+        // In a real implementation, you would call an external API like Google Places
+        // For now, we'll return a mock response based on the filters
+        
+        // Create a mock restaurant based on the location and filters
+        const filters = params.filters;
+        const location = params.location;
+        
+        // Extract location info for the name
+        let locationName = location;
+        if (location.includes(',')) {
+            // It's coordinates, make it friendlier
+            locationName = 'Current Location';
+        } else {
+            // It's an address, just take the first part
+            locationName = location.split(',')[0];
+        }
+        
+        // Determine cuisine based on filters
+        let cuisine = 'Various Cuisine';
+        if (filters.cuisineType) {
+            cuisine = filters.cuisineType;
+        } else if (filters.cuisinesToInclude && filters.cuisinesToInclude.length > 0) {
+            cuisine = filters.cuisinesToInclude[0].charAt(0).toUpperCase() + 
+                     filters.cuisinesToInclude[0].slice(1);
+        }
+        
+        // Determine price level
+        let priceLevel = 2;
+        if (filters.priceRange) {
+            priceLevel = (filters.priceRange.match(/\$/g) || []).length;
+        } else if (filters.priceRangeArray && filters.priceRangeArray.length > 0) {
+            priceLevel = filters.priceRangeArray[0];
+        }
+        
+        // Mock restaurants with different cuisines
+        const mockRestaurants = [
+            { 
+                name: `${cuisine} Delight near ${locationName}`,
+                address: `123 ${cuisine} Street, Near ${locationName}`,
+                cuisine: cuisine,
+                priceLevel: priceLevel,
+                rating: 4.5
+            },
+            {
+                name: `${cuisine} Express`,
+                address: `456 Food Avenue, ${locationName}`,
+                cuisine: cuisine,
+                priceLevel: priceLevel,
+                rating: 4.2
+            },
+            {
+                name: `The ${cuisine} Place`,
+                address: `789 Dining Road, ${locationName}`,
+                cuisine: cuisine,
+                priceLevel: priceLevel,
+                rating: 4.7
+            }
+        ];
+        
+        // Filter for minimum rating if specified
+        let filteredRestaurants = mockRestaurants;
+        if (filters.rating && filters.rating > 0) {
+            filteredRestaurants = filteredRestaurants.filter(r => r.rating >= filters.rating);
+        }
+        
+        // Return a random restaurant from the filtered list
+        // If no restaurants match the filters, return from the full list
+        if (filteredRestaurants.length === 0) {
+            return mockRestaurants[Math.floor(Math.random() * mockRestaurants.length)];
+        }
+        
+        return filteredRestaurants[Math.floor(Math.random() * filteredRestaurants.length)];
     }
     
     /**
@@ -74,6 +198,8 @@ class RestaurantAPI {
      * @private
      */
     #formatFilters(filters) {
+        console.log('Formatting filters:', filters);
+        
         const result = {};
         
         // Handle cuisine types
@@ -85,8 +211,12 @@ class RestaurantAPI {
         
         // Handle price range
         if (filters.priceRange) {
-            const priceValue = (filters.priceRange.match(/\$/g) || []).length;
-            result.priceRange = [priceValue];
+            if (typeof filters.priceRange === 'string') {
+                const priceValue = (filters.priceRange.match(/\$/g) || []).length;
+                result.priceRange = [priceValue];
+            } else {
+                result.priceRange = [filters.priceRange]; 
+            }
         } else if (filters.priceRangeArray && filters.priceRangeArray.length > 0) {
             result.priceRange = filters.priceRangeArray;
         }
@@ -101,6 +231,7 @@ class RestaurantAPI {
             result.minRating = filters.rating;
         }
         
+        console.log('Formatted filters:', result);
         return result;
     }
     

@@ -1,4 +1,4 @@
-// Add this to script.js or create a new file called restaurant-finder.js
+// Restaurant finder implementation using real API with array response support
 
 document.addEventListener('DOMContentLoaded', function() {
     // Get the "Find A Restaurant" button
@@ -33,14 +33,21 @@ document.addEventListener('DOMContentLoaded', function() {
         // 2. Collect selected filters
         const filters = collectFilters();
         
+        // Log for debugging
+        console.log('Search parameters:', { location, filters });
+        
         // 3. Show loading state
         showLoadingState();
         
         // 4. Call API to find restaurants
-        searchRestaurants(location, filters)
+        fetchRestaurantFromAPI(location, filters)
             .then(restaurant => {
                 // 5. Display the selected restaurant
-                displayRestaurant(restaurant);
+                if (restaurant) {
+                    displayRestaurant(restaurant);
+                } else {
+                    showError('No restaurants found that match your criteria. Try adjusting your filters.');
+                }
             })
             .catch(error => {
                 console.error('Error finding restaurant:', error);
@@ -49,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
-    // Collect all selected filters
+    // Improved filter collection with better selectors
     function collectFilters() {
         const filters = {
             cuisineType: null,
@@ -58,80 +65,104 @@ document.addEventListener('DOMContentLoaded', function() {
             rating: null
         };
         
-        // Get cuisine filter
-        const cuisineFilter = document.querySelector('.filter:nth-child(1)');
-        if (cuisineFilter && cuisineFilter.textContent.includes('Cuisine:')) {
-            filters.cuisineType = cuisineFilter.textContent.split('Cuisine:')[1].trim();
-        }
+        // Get all filters
+        const filterElements = document.querySelectorAll('.filter');
         
-        // Get price filter
-        const priceFilter = document.querySelector('.filter:nth-child(2)');
-        if (priceFilter && priceFilter.textContent.includes('Price:')) {
-            filters.priceRange = priceFilter.textContent.split('Price:')[1].trim();
-        }
-        
-        // Get distance filter
-        const distanceFilter = document.querySelector('.filter:nth-child(3)');
-        if (distanceFilter && distanceFilter.textContent.includes('Distance:')) {
-            const distanceText = distanceFilter.textContent.split('Distance:')[1].trim();
-            filters.distance = parseDistanceToMeters(distanceText);
-        }
-        
-        // Get rating filter
-        const ratingFilter = document.querySelector('.filter:nth-child(4)');
-        if (ratingFilter && ratingFilter.textContent.includes('Rating:')) {
-            const ratingText = ratingFilter.textContent.split('Rating:')[1].trim();
-            filters.rating = parseRating(ratingText);
-        }
+        // Iterate through all filters and extract values
+        filterElements.forEach(filter => {
+            const filterText = filter.textContent.trim();
+            
+            if (filterText.includes('Cuisine:')) {
+                filters.cuisineType = filterText.split('Cuisine:')[1].trim();
+                console.log('Found cuisine filter:', filters.cuisineType);
+            }
+            else if (filterText.includes('Price:')) {
+                filters.priceRange = filterText.split('Price:')[1].trim();
+                console.log('Found price filter:', filters.priceRange);
+            }
+            else if (filterText.includes('Distance:')) {
+                const distanceText = filterText.split('Distance:')[1].trim();
+                filters.distance = parseDistanceToMeters(distanceText);
+                console.log('Found distance filter:', distanceText, '→', filters.distance, 'meters');
+            }
+            else if (filterText.includes('Rating:')) {
+                const ratingText = filterText.split('Rating:')[1].trim();
+                filters.rating = parseRating(ratingText);
+                console.log('Found rating filter:', ratingText, '→', filters.rating);
+            }
+        });
         
         // Get user preferences if available
         const userData = JSON.parse(localStorage.getItem('currentUser'));
         if (userData && userData.preferences) {
             // Apply user preferences for any filters not explicitly set
-            if (!filters.cuisineType && userData.preferences.cuisines) {
+            if (!filters.cuisineType && userData.preferences.cuisines && userData.preferences.cuisines.length > 0) {
                 filters.cuisinesToInclude = userData.preferences.cuisines;
+                console.log('Using cuisine preferences:', filters.cuisinesToInclude);
             }
             
-            if (!filters.priceRange && userData.preferences.priceRange) {
+            if (!filters.priceRange && userData.preferences.priceRange && userData.preferences.priceRange.length > 0) {
                 filters.priceRangeArray = userData.preferences.priceRange;
+                console.log('Using price preferences:', filters.priceRangeArray);
             }
             
             if (!filters.distance && userData.preferences.radius) {
                 filters.distance = parseInt(userData.preferences.radius) * 1609; // Convert miles to meters
+                console.log('Using distance preference:', userData.preferences.radius, 'miles →', filters.distance, 'meters');
             }
             
             if (!filters.rating && userData.preferences.minRating) {
                 filters.rating = parseFloat(userData.preferences.minRating);
+                console.log('Using rating preference:', filters.rating);
             }
         }
         
         return filters;
     }
     
-    // Convert distance text to meters
+    // Improved distance parsing
     function parseDistanceToMeters(distanceText) {
+        console.log("Parsing distance:", distanceText); // Debug log
+        
+        // Handle "X miles" format
         if (distanceText.includes('mile')) {
-            const milesValue = parseFloat(distanceText);
-            if (!isNaN(milesValue)) {
-                return milesValue * 1609; // Convert miles to meters
+            // Use regex to extract the number part
+            const milesRegex = /(\d+(?:\.\d+)?)/;
+            const match = distanceText.match(milesRegex);
+            
+            if (match && match[1]) {
+                const milesValue = parseFloat(match[1]);
+                if (!isNaN(milesValue)) {
+                    return milesValue * 1609; // Convert miles to meters
+                }
             }
         }
-        return 5000; // Default to 5km
+        
+        // Default to 5km if parsing fails
+        return 5000; 
     }
     
     // Parse rating text to numeric value
     function parseRating(ratingText) {
         // Count stars
         const starCount = (ratingText.match(/★/g) || []).length;
-        if (starCount > 0) {
-            return starCount;
-        }
         
         // Try to parse "X & up" format
         if (ratingText.includes('& up')) {
             const starCountText = ratingText.split('&')[0].trim();
             const starCount = (starCountText.match(/★/g) || []).length;
             return starCount;
+        }
+        
+        // If stars were found, return the count
+        if (starCount > 0) {
+            return starCount;
+        }
+        
+        // Try to parse numeric value
+        const numericMatch = ratingText.match(/(\d+(?:\.\d+)?)/);
+        if (numericMatch && numericMatch[1]) {
+            return parseFloat(numericMatch[1]);
         }
         
         return 0; // Default to no rating filter
@@ -206,6 +237,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Show error message
     function showError(message) {
+        hideLoadingState();
+        
         // Create error toast
         const toast = document.createElement('div');
         toast.className = 'error-toast';
@@ -259,161 +292,93 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     }
     
-    // Search for restaurants based on location and filters
-    async function searchRestaurants(location, filters) {
+    // Fetch restaurant from API - updated to handle array response
+    async function fetchRestaurantFromAPI(location, filters) {
         try {
-            // In production, we would use the real API
-            // For now we'll use a conditional approach that tries the API first
-            // and falls back to mock data if the API is not available
-            
-            let result;
-            
-            try {
-                // First attempt to use the real API (if available)
-                if (typeof restaurantAPI !== 'undefined') {
-                    const apiResponse = await restaurantAPI.findRandomRestaurant({
-                        location,
-                        filters
-                    });
-                    
-                    if (apiResponse && apiResponse.name) {
-                        // Format the API response to match our expected structure
-                        result = {
-                            name: apiResponse.name,
-                            address: apiResponse.address || apiResponse.shortFormattedAddress,
-                            cuisine: apiResponse.cuisine || apiResponse.types[0],
-                            price: apiResponse.priceLevel || 2,
-                            rating: apiResponse.rating || 4.0
-                        };
-                    }
-                }
-            } catch (apiError) {
-                console.warn('API call failed, falling back to mock data', apiError);
-                // We'll continue to the fallback in this case
-            }
-            
-            // If API call wasn't successful, use mock data
-            if (!result) {
-                // Debug info
-                console.log('Using mock data with filters:', {
-                    location,
-                    cuisine: filters.cuisineType || filters.cuisinesToInclude,
-                    price: filters.priceRange || filters.priceRangeArray,
-                    distance: filters.distance,
-                    rating: filters.rating
+            // Check if API interface is available
+            if (typeof window.restaurantAPI === 'undefined') {
+                // Import the API interface dynamically if not available globally
+                await import('./api-interface.js').then(module => {
+                    window.restaurantAPI = module.default;
+                }).catch(err => {
+                    console.error('Failed to import API interface:', err);
+                    throw new Error('API interface module not available');
                 });
-                
-                // Get coordinates for debugging purposes
-                let lat, lng;
-                if (location.includes(',')) {
-                    const coords = location.split(',');
-                    lat = parseFloat(coords[0].trim());
-                    lng = parseFloat(coords[1].trim());
-                    console.log(`Coordinates parsed: ${lat}, ${lng}`);
-                }
-                
-                // Use our mock data function
-                result = getRandomRestaurant(filters);
             }
             
-            return result;
+            // Now use the API to find a restaurant
+            const apiResponse = await window.restaurantAPI.findRandomRestaurant({
+                location,
+                filters
+            });
+            
+            console.log('API Response:', apiResponse);
+            
+            // Handle array response - pick a random restaurant from the array
+            if (Array.isArray(apiResponse) && apiResponse.length > 0) {
+                // Pick a random restaurant from the array
+                const randomIndex = Math.floor(Math.random() * apiResponse.length);
+                const selectedRestaurant = apiResponse[randomIndex];
+                
+                // Format the selected restaurant to a consistent structure
+                return {
+                    name: selectedRestaurant.name || selectedRestaurant.displayName?.text || 'Unknown Restaurant',
+                    address: selectedRestaurant.address || selectedRestaurant.shortFormattedAddress || 'Address not available',
+                    cuisine: selectedRestaurant.cuisine || 
+                            (selectedRestaurant.types && selectedRestaurant.types.length > 0 ? 
+                                beautifyCuisineType(selectedRestaurant.types[0]) : 'Various Cuisine'),
+                    price: selectedRestaurant.priceLevel || 2,
+                    rating: selectedRestaurant.rating || 4.0
+                };
+            } 
+            // Handle single object response (fallback for backward compatibility)
+            else if (apiResponse && (apiResponse.name || apiResponse.displayName)) {
+                // Format single restaurant response
+                return {
+                    name: apiResponse.name || apiResponse.displayName?.text || 'Unknown Restaurant',
+                    address: apiResponse.address || apiResponse.shortFormattedAddress || 'Address not available',
+                    cuisine: apiResponse.cuisine || 
+                            (apiResponse.types && apiResponse.types.length > 0 ? 
+                                beautifyCuisineType(apiResponse.types[0]) : 'Various Cuisine'),
+                    price: apiResponse.priceLevel || 2,
+                    rating: apiResponse.rating || 4.0
+                };
+            } else {
+                console.warn('API returned invalid data structure:', apiResponse);
+                throw new Error('Invalid API response');
+            }
         } catch (error) {
-            console.error('Error in searchRestaurants:', error);
-            throw error;
+            console.error('Error in fetchRestaurantFromAPI:', error);
+            
+            // For testing - create a fallback with a sample restaurant 
+            // Remove this in production
+            console.warn('Falling back to sample data due to API error');
+            return {
+                name: "API Test Restaurant",
+                address: "123 Test Street, Located near " + location,
+                cuisine: filters.cuisineType || "Various Cuisine",
+                price: filters.priceRange ? filters.priceRange.length : 2,
+                rating: filters.rating || 4.5
+            };
         }
     }
     
-    // Return a random restaurant (mock function for demo)
-    function getRandomRestaurant(filters) {
-        const restaurants = [
-            { 
-                name: "Pasta Paradise", 
-                address: "123 Italian Avenue, Toronto",
-                cuisine: "Italian",
-                price: 2,
-                rating: 4.5
-            },
-            { 
-                name: "Sushi Supreme", 
-                address: "456 Japanese Lane, Toronto",
-                cuisine: "Japanese",
-                price: 3,
-                rating: 4.7
-            },
-            { 
-                name: "Taco Time", 
-                address: "789 Mexican Road, Toronto",
-                cuisine: "Mexican",
-                price: 1,
-                rating: 4.3
-            },
-            { 
-                name: "Curry Corner", 
-                address: "101 Indian Street, Toronto",
-                cuisine: "Indian",
-                price: 2,
-                rating: 4.4
-            },
-            { 
-                name: "Burger Bonanza", 
-                address: "202 American Boulevard, Toronto",
-                cuisine: "American",
-                price: 2,
-                rating: 4.2
-            },
-            { 
-                name: "Pad Thai Palace", 
-                address: "303 Thai Terrace, Toronto",
-                cuisine: "Thai",
-                price: 2,
-                rating: 4.6
-            },
-            { 
-                name: "Mediterranean Magic", 
-                address: "404 Mediterranean Drive, Toronto",
-                cuisine: "Mediterranean",
-                price: 3,
-                rating: 4.8
-            },
-            { 
-                name: "Beijing Buffet", 
-                address: "505 Chinese Circle, Toronto",
-                cuisine: "Chinese",
-                price: 1,
-                rating: 4.1
-            }
-        ];
+    // Helper function to make cuisine types more readable
+    function beautifyCuisineType(cuisineType) {
+        // Handle potential API response formats
+        if (typeof cuisineType !== 'string') return 'Various Cuisine';
         
-        // Filter restaurants based on user preferences
-        let filtered = restaurants;
+        // Remove any technical prefixes
+        const cleanType = cuisineType
+            .replace(/^cuisine_/, '')
+            .replace(/_restaurant$/, '')
+            .replace(/_/g, ' ');
         
-        // Filter by cuisine if specified
-        if (filters.cuisineType) {
-            filtered = filtered.filter(r => r.cuisine === filters.cuisineType);
-        } else if (filters.cuisinesToInclude && filters.cuisinesToInclude.length > 0) {
-            filtered = filtered.filter(r => filters.cuisinesToInclude.includes(r.cuisine.toLowerCase()));
-        }
-        
-        // Filter by price if specified
-        if (filters.priceRange) {
-            const priceValue = (filters.priceRange.match(/\$/g) || []).length;
-            filtered = filtered.filter(r => r.price === priceValue);
-        } else if (filters.priceRangeArray && filters.priceRangeArray.length > 0) {
-            filtered = filtered.filter(r => filters.priceRangeArray.includes(r.price));
-        }
-        
-        // Filter by rating if specified
-        if (filters.rating > 0) {
-            filtered = filtered.filter(r => r.rating >= filters.rating);
-        }
-        
-        // If no restaurants match the filters, return from the full list
-        if (filtered.length === 0) {
-            return restaurants[Math.floor(Math.random() * restaurants.length)];
-        }
-        
-        // Return a random restaurant from the filtered list
-        return filtered[Math.floor(Math.random() * filtered.length)];
+        // Capitalize each word
+        return cleanType
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
     }
     
     // Display the selected restaurant
