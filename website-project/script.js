@@ -18,9 +18,30 @@ document.addEventListener('DOMContentLoaded', function() {
     // Filter click functionality
     const filters = document.querySelectorAll('.filter');
     
-    // Create filter options for each filter type
+    // Create filter options for each filter type with expanded cuisine list
     const filterOptions = {
-        'Cuisine': ['Italian', 'Chinese', 'Mexican', 'Indian', 'Japanese', 'American', 'Thai', 'Mediterranean'],
+        'Cuisine': [
+            'Afghani',
+            'African',
+            'American',
+            'Brazilian',
+            'Chinese',
+            'French',
+            'Greek',
+            'Indian',
+            'Indonesian',
+            'Italian',
+            'Japanese',
+            'Korean',
+            'Lebanese',
+            'Mediterranean',
+            'Mexican',
+            'Middle Eastern',
+            'Spanish',
+            'Thai',
+            'Turkish',
+            'Vietnamese'
+        ],
         'Price': ['$', '$$', '$$$', '$$$$'],
         'Distance': ['0.5 miles', '1 mile', '3 miles', '5 miles', '10+ miles'],
         'Rating': ['★★★★★', '★★★★☆ & up', '★★★☆☆ & up', '★★☆☆☆ & up']
@@ -84,6 +105,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 dropdown.style.padding = '0.8rem';
                 dropdown.style.zIndex = '100';
                 dropdown.style.minWidth = '150px';
+                
+                // Special handling for the longer cuisine list
+                if (filterType === 'Cuisine') {
+                    dropdown.style.maxHeight = '300px';
+                    dropdown.style.overflowY = 'auto';
+                }
                 
                 // Add options to dropdown
                 options.forEach(option => {
