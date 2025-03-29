@@ -384,7 +384,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // Display the selected restaurant
     function displayRestaurant(restaurant) {
         hideLoadingState();
+
+        // Save to history
+        const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
+        const history = currentUser.searchHistory || [];
+        history.push({
+            name: restaurant.name,
+            address: restaurant.address,
+            cuisine: restaurant.cuisine,
+            price: restaurant.price,
+            rating: restaurant.rating,
+            timestamp: new Date().toISOString()
+        });
         
+        currentUser.searchHistory = history;
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
         // Create the restaurant result modal
         const modal = document.createElement('div');
         modal.className = 'restaurant-modal';
