@@ -388,17 +388,29 @@ document.addEventListener('DOMContentLoaded', function() {
         // Save to history
         const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
         const history = currentUser.searchHistory || [];
-        history.push({
-            name: restaurant.name,
-            address: restaurant.address,
-            cuisine: restaurant.cuisine,
-            price: restaurant.price,
-            rating: restaurant.rating,
-            timestamp: new Date().toISOString()
-        });
-        
-        currentUser.searchHistory = history;
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+        const isDuplicate = history.some(entry =>
+            entry.name === restaurant.name && entry.address === restaurant.address
+        );
+
+        if (!isDuplicate) {
+            history.unshift({
+                name: restaurant.name,
+                address: restaurant.address,
+                cuisine: restaurant.cuisine,
+                price: restaurant.price,
+                rating: restaurant.rating,
+                timestamp: new Date().toISOString()
+            });
+
+            if (history.length > 10) {
+                history.splice(10);
+            }
+            
+            currentUser.searchHistory = history;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        }
+
         // Create the restaurant result modal
         const modal = document.createElement('div');
         modal.className = 'restaurant-modal';
