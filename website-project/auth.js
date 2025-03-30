@@ -1,3 +1,5 @@
+// Fixed auth.js with corrected signup flow
+
 document.addEventListener('DOMContentLoaded', function() {
     // Handle password visibility toggle
     const togglePasswordButtons = document.querySelectorAll('.toggle-password');
@@ -274,6 +276,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const authForm = document.querySelector('.auth-form');
             authForm.parentNode.replaceChild(successMessage, authForm);
+            
+            // Update auth buttons in the header immediately to show logged-in state
+            updateNavForLoggedInUser(user);
             
             // Redirect to home page after delay
             setTimeout(() => {
