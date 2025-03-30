@@ -1,0 +1,1 @@
+these are required for the local server and servlet communication between frontend and backend
