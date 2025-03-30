@@ -25,11 +25,6 @@
 
   <main class="history-container" style="padding: 2rem; max-width: 800px; margin: auto;">
     <h2 style="margin-bottom: 1.5rem;">Your Search History</h2>
-    <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
-      <button id="clear-history" class="btn btn-danger">
-        <i class="fas fa-trash-alt"></i> Clear History
-      </button>
-    </div> 
     <div id="history-list"></div>
   </main>
 
@@ -72,18 +67,6 @@
         `;
         historyList.appendChild(div);
       });
-
-      // Clear history button functionality
-      const clearBtn = document.getElementById('clear-history');
-      if (clearBtn) {
-        clearBtn.addEventListener('click', () => {
-          if (confirm('Are you sure you want to clear your search history?')) {
-            currentUser.searchHistory = [];
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            location.reload(); // Refresh to update UI
-          }
-        });
-      }
     });
   </script>
 </body>

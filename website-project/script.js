@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
             'Vietnamese'
         ],
         'Price': ['$', '$$', '$$$', '$$$$'],
-        'Distance': ['0.5 miles', '1 mile', '3 miles', '5 miles', '10+ miles'],
+        'Distance': ['0.5 km', '1 km', '3 km', '5 km', '10+ km'],
         'Rating': ['★★★★★', '★★★★☆ & up', '★★★☆☆ & up', '★★☆☆☆ & up']
     };
 
