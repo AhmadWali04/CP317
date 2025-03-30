@@ -15,151 +15,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Filter click functionality
-    const filters = document.querySelectorAll('.filter');
-    
-    // Create filter options for each filter type with expanded cuisine list
-    const filterOptions = {
-        'Cuisine': [
-            'Afghani',
-            'African',
-            'American',
-            'Brazilian',
-            'Chinese',
-            'French',
-            'Greek',
-            'Indian',
-            'Indonesian',
-            'Italian',
-            'Japanese',
-            'Korean',
-            'Lebanese',
-            'Mediterranean',
-            'Mexican',
-            'Middle Eastern',
-            'Spanish',
-            'Thai',
-            'Turkish',
-            'Vietnamese'
-        ],
-        'Price': ['$', '$$', '$$$', '$$$$'],
-        'Distance': ['0.5 km', '1 km', '3 km', '5 km', '10+ km'],
-        'Rating': ['★★★★★', '★★★★☆ & up', '★★★☆☆ & up', '★★☆☆☆ & up']
-    };
-
-    // Function to get filter type
-    function getFilterType(element) {
-        const text = element.textContent.trim();
-        if (text.includes('Cuisine')) return 'Cuisine';
-        if (text.includes('Price')) return 'Price';
-        if (text.includes('Distance')) return 'Distance';
-        if (text.includes('Rating')) return 'Rating';
-        return '';
-    }
-
-    // Close any open dropdowns
-    function closeDropdowns() {
-        const dropdowns = document.querySelectorAll('.filter-dropdown');
-        dropdowns.forEach(dropdown => dropdown.remove());
-    }
-
-    // Handle filter click
-    filters.forEach(filter => {
-        filter.addEventListener('click', function(e) {
-            e.stopPropagation();
-            
-            // Get filter type
-            const filterType = getFilterType(this);
-            if (!filterType) return;
-            
-            // Check if this filter already has an open dropdown
-            const existingDropdown = document.querySelector('.filter-dropdown');
-            if (existingDropdown && existingDropdown.dataset.filterType === filterType) {
-                existingDropdown.remove();
-                return;
-            }
-            
-            // Close any open dropdowns
-            closeDropdowns();
-            
-            // Toggle active state
-            filters.forEach(f => {
-                if (f !== this) f.classList.remove('active');
-            });
-            this.classList.toggle('active');
-            
-            // If active, create and show dropdown
-            if (this.classList.contains('active')) {
-                const options = filterOptions[filterType];
-                
-                // Create dropdown element
-                const dropdown = document.createElement('div');
-                dropdown.className = 'filter-dropdown';
-                dropdown.dataset.filterType = filterType;
-                
-                // Style the dropdown
-                dropdown.style.position = 'absolute';
-                dropdown.style.backgroundColor = 'white';
-                dropdown.style.borderRadius = '8px';
-                dropdown.style.boxShadow = '0 5px 15px rgba(0,0,0,0.1)';
-                dropdown.style.padding = '0.8rem';
-                dropdown.style.zIndex = '100';
-                dropdown.style.minWidth = '150px';
-                
-                // Special handling for the longer cuisine list
-                if (filterType === 'Cuisine') {
-                    dropdown.style.maxHeight = '300px';
-                    dropdown.style.overflowY = 'auto';
-                }
-                
-                // Add options to dropdown
-                options.forEach(option => {
-                    const optionElement = document.createElement('div');
-                    optionElement.className = 'filter-option';
-                    optionElement.style.padding = '0.5rem 1rem';
-                    optionElement.style.cursor = 'pointer';
-                    optionElement.style.borderRadius = '4px';
-                    optionElement.style.margin = '0.2rem 0';
-                    optionElement.textContent = option;
-                    
-                    optionElement.addEventListener('mouseenter', function() {
-                        this.style.backgroundColor = '#f8f9fa';
-                    });
-                    
-                    optionElement.addEventListener('mouseleave', function() {
-                        this.style.backgroundColor = 'transparent';
-                    });
-                    
-                    optionElement.addEventListener('click', function() {
-                        // Update filter text to show selection
-                        const iconElement = filter.querySelector('i').cloneNode(true);
-                        filter.innerHTML = '';
-                        filter.appendChild(iconElement);
-                        filter.appendChild(document.createTextNode(' ' + filterType + ': ' + option));
-                        
-                        // Close dropdown
-                        dropdown.remove();
-                    });
-                    
-                    dropdown.appendChild(optionElement);
-                });
-                
-                // Add dropdown to document body
-                document.body.appendChild(dropdown);
-                
-                // Position dropdown below filter
-                const filterRect = this.getBoundingClientRect();
-                dropdown.style.top = (filterRect.bottom + window.scrollY) + 'px';
-                dropdown.style.left = (filterRect.left + window.scrollX) + 'px';
-            }
-        });
-    });
-    
-    // Close dropdowns when clicking outside
-    document.addEventListener('click', function() {
-        closeDropdowns();
-        filters.forEach(filter => filter.classList.remove('active'));
-    });
+    // Set up filters and clear filters button
+    setupFilters();
 
     // Get Location button click event
     const getLocationBtn = document.querySelector('.btn-location');
@@ -329,6 +186,217 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         }
+    }
+
+    // Setup filters and clear filters button
+    function setupFilters() {
+        // Create filter options for each filter type with expanded cuisine list
+        const filterOptions = {
+            'Cuisine': [
+                'Afghani',
+                'African',
+                'American',
+                'Brazilian',
+                'Chinese',
+                'French',
+                'Greek',
+                'Indian',
+                'Indonesian',
+                'Italian',
+                'Japanese',
+                'Korean',
+                'Lebanese',
+                'Mediterranean',
+                'Mexican',
+                'Middle Eastern',
+                'Spanish',
+                'Thai',
+                'Turkish',
+                'Vietnamese'
+            ],
+            'Price': ['$', '$$', '$$$', '$$$$'],
+            'Distance': ['0.5 km', '1 km', '3 km', '5 km', '10+ km'],
+            'Rating': ['★★★★★', '★★★★☆ & up', '★★★☆☆ & up', '★★☆☆☆ & up']
+        };
+
+        // Set up regular filters
+        const filters = document.querySelectorAll('.filter:not(#clear-filters)');
+        
+        // Function to get filter type
+        function getFilterType(element) {
+            const text = element.textContent.trim();
+            if (text.includes('Cuisine')) return 'Cuisine';
+            if (text.includes('Price')) return 'Price';
+            if (text.includes('Distance')) return 'Distance';
+            if (text.includes('Rating')) return 'Rating';
+            return '';
+        }
+
+        // Function to get the appropriate icon class for a filter type
+        function getIconClassForFilter(filterType) {
+            switch (filterType) {
+                case 'Cuisine': return 'fas fa-utensils';
+                case 'Price': return 'fas fa-dollar-sign';
+                case 'Distance': return 'fas fa-map-marker-alt';
+                case 'Rating': return 'fas fa-star';
+                default: return 'fas fa-filter';
+            }
+        }
+
+        // Close any open dropdowns
+        function closeDropdowns() {
+            const dropdowns = document.querySelectorAll('.filter-dropdown');
+            dropdowns.forEach(dropdown => dropdown.remove());
+        }
+
+        // Function to clear all filters
+        function clearAllFilters() {
+            console.log("Clear filters button clicked");
+            
+            filters.forEach(filter => {
+                const filterType = getFilterType(filter);
+                if (!filterType) return;
+                
+                const iconClass = getIconClassForFilter(filterType);
+                
+                // Reset filter text to default
+                filter.innerHTML = `<i class="${iconClass}"></i> ${filterType}`;
+                console.log(`Reset filter: ${filterType}`);
+            });
+            
+            // Close any open dropdowns
+            closeDropdowns();
+            
+            console.log('All filters cleared');
+        }
+
+        // Set up the clear filters button
+        const clearFiltersBtn = document.getElementById('clear-filters');
+        if (clearFiltersBtn) {
+            // Add style if not already added
+            if (!document.getElementById('clear-filters-style')) {
+                const style = document.createElement('style');
+                style.id = 'clear-filters-style';
+                style.textContent = `
+                    .clear-button {
+                        background-color: var(--light-color);
+                        border: 1px dashed #ddd;
+                    }
+                    .clear-button:hover {
+                        background-color: var(--primary-color);
+                        color: white;
+                        border: 1px solid var(--primary-color);
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            // Add click handler
+            clearFiltersBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                clearAllFilters();
+            });
+            
+            console.log("Clear filters button initialized");
+        } else {
+            console.log("Clear filters button not found in DOM");
+        }
+
+        // Handle filter click
+        filters.forEach(filter => {
+            filter.addEventListener('click', function(e) {
+                e.stopPropagation();
+                
+                // Get filter type
+                const filterType = getFilterType(this);
+                if (!filterType) return;
+                
+                // Check if this filter already has an open dropdown
+                const existingDropdown = document.querySelector('.filter-dropdown');
+                if (existingDropdown && existingDropdown.dataset.filterType === filterType) {
+                    existingDropdown.remove();
+                    return;
+                }
+                
+                // Close any open dropdowns
+                closeDropdowns();
+                
+                // Toggle active state
+                filters.forEach(f => {
+                    if (f !== this) f.classList.remove('active');
+                });
+                this.classList.toggle('active');
+                
+                // If active, create and show dropdown
+                if (this.classList.contains('active')) {
+                    const options = filterOptions[filterType];
+                    
+                    // Create dropdown element
+                    const dropdown = document.createElement('div');
+                    dropdown.className = 'filter-dropdown';
+                    dropdown.dataset.filterType = filterType;
+                    
+                    // Style the dropdown
+                    dropdown.style.position = 'absolute';
+                    dropdown.style.backgroundColor = 'white';
+                    dropdown.style.borderRadius = '8px';
+                    dropdown.style.boxShadow = '0 5px 15px rgba(0,0,0,0.1)';
+                    dropdown.style.padding = '0.8rem';
+                    dropdown.style.zIndex = '100';
+                    dropdown.style.minWidth = '150px';
+                    
+                    // Special handling for the longer cuisine list
+                    if (filterType === 'Cuisine') {
+                        dropdown.style.maxHeight = '300px';
+                        dropdown.style.overflowY = 'auto';
+                    }
+                    
+                    // Add options to dropdown
+                    options.forEach(option => {
+                        const optionElement = document.createElement('div');
+                        optionElement.className = 'filter-option';
+                        optionElement.style.padding = '0.5rem 1rem';
+                        optionElement.style.cursor = 'pointer';
+                        optionElement.style.borderRadius = '4px';
+                        optionElement.style.margin = '0.2rem 0';
+                        optionElement.textContent = option;
+                        
+                        optionElement.addEventListener('mouseenter', function() {
+                            this.style.backgroundColor = '#f8f9fa';
+                        });
+                        
+                        optionElement.addEventListener('mouseleave', function() {
+                            this.style.backgroundColor = 'transparent';
+                        });
+                        
+                        optionElement.addEventListener('click', function() {
+                            // Update filter text to show selection
+                            const iconClass = getIconClassForFilter(filterType);
+                            filter.innerHTML = `<i class="${iconClass}"></i> ${filterType}: ${option}`;
+                            
+                            // Close dropdown
+                            dropdown.remove();
+                        });
+                        
+                        dropdown.appendChild(optionElement);
+                    });
+                    
+                    // Add dropdown to document body
+                    document.body.appendChild(dropdown);
+                    
+                    // Position dropdown below filter
+                    const filterRect = this.getBoundingClientRect();
+                    dropdown.style.top = (filterRect.bottom + window.scrollY) + 'px';
+                    dropdown.style.left = (filterRect.left + window.scrollX) + 'px';
+                }
+            });
+        });
+        
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function() {
+            closeDropdowns();
+            filters.forEach(filter => filter.classList.remove('active'));
+        });
     }
 
     // Smooth scrolling for anchor links
