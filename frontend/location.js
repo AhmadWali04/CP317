@@ -235,7 +235,7 @@ class LocationService {
     reverseGeocode(latitude, longitude) {
         return new Promise((resolve, reject) => {
             // Use Google Maps Geocoding API
-            const apiKey = 'AIzaSyDGYZDBalEh2oeJP6SnU6mffWQNj4FPDt0';
+            const apiKey = 'AIzaSyAl4OsSbGOk8wIOCrwVP7gAkq-R3IYMti0';
             const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`;
             
             console.log('Sending geocoding request to:', url);
