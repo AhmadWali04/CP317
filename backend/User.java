@@ -11,7 +11,8 @@ public class User{
      * Contributed By: Ahmad W
      */
     private int id;
-    private String name;
+    private String firstName;
+    private String lastName;
     private String email;
     private String password;
     //super the location somehow
@@ -24,13 +25,13 @@ public class User{
      * Contributed By: Ahmad W
      */
 
-    public User(int id, String name, String email, String password, float radius,String[] searchHistory){
+    public User(int id, String firstName, String lastName, String email, String password, float radius,String[] searchHistory){
         this.id = id;
-        this.name = name;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.email = email;
         this.password = password;
         this.searchHistory = searchHistory;
-
         //creating the hashmap object:
         this.preferences = new HashMap<>();
         this.preferences.put("Price Range", null);
@@ -39,8 +40,8 @@ public class User{
     }
 
         //Overload Constructor for the User Database
-        public User(int id, String name, String email, String password) {
-            this(id, name, email, password, 0.0f, new String[0]); // default values
+        public User(int id, String firstName, String lastName, String email, String password) {
+            this(id, firstName, lastName, email, password, 0.0f, new String[0]); // default values
         }
     
     
@@ -116,8 +117,12 @@ public class User{
         return this.password;
     }
     
-    public String getName(){
-        return this.name;
+    public String getFirstName(){
+        return this.firstName;
+    }
+
+    public String getLastName(){
+        return this.lastName;
     }
 
     public List<String> getFavourites(){
@@ -140,7 +145,11 @@ public class User{
     public void setPassword(String password){
         this.password = password;
     }
-    public void setName(String name){
-        this.name = name;
+    public void setFirstName(String firstName){
+        this.firstName = firstName;
+    }
+
+    public void setLastName(String lastName){
+        this.lastName = lastName;
     }
 }
