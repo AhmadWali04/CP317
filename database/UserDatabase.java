@@ -7,15 +7,17 @@ import java.sql.SQLException;
 
 public class UserDatabase extends User {
     private int userId;
+    private int userTripID;
     private String userFirstName;
     private String userLastName;
     private String userEmail;
     private String userPassword;
 
     // Constructor to copy our user object information
-    public UserDatabase(int id, String firstName, String lastName, String email, String password) {
-        super(id, firstName, lastName, email, password);
+    public UserDatabase(int id, String firstName, String lastName, String email, String password, int tripID) {
+        super(id, firstName, lastName, email, password, tripID);
         super.setID(id);
+        super.setTripID();
         super.setPassword(password);
         super.setFirstName(firstName);
         super.setLastName(lastName);
@@ -36,7 +38,9 @@ public class UserDatabase extends User {
              PreparedStatement statement = connection.prepareStatement(insertQuery)) {
                 
             // Set parameters for the query
+            
             statement.setInt(1, this.getId());
+            statement.setInt(1, this.getTripID());
             statement.setString(2,this.getFirstName());
             statement.setString(2,this.getLastName());
             statement.setString(2,this.getEmail());
