@@ -1,1 +1,40 @@
-Please write what the schematics for the database are here, sorta like a UML diagram just write down what the tables and their attributes are, also keys
+Database schematics:
+
+Database implements: //Ahmad & Saksham & Akash
+users {userID, firstName, lastName, email, password, tripID} 
+userTrips{tripID,restaurantID,dataVisited}
+resturuants {restaurantID, visitorID, name, restaurantCategory}
+favourites {userID, restaurantName, restaurantID} 
+history {usierID, restaurantID, resturauntName}
+
+Schematic Explanation:
+User Table:
+userID: is a primary key to identify users, foreign key for favourites/history
+firstName,lastName, email: self-explanatory, descriptive
+tripID & restaurantID: foreign key to link to restaurants user has been to
+
+
+Restauraunts Table:
+restaurantId: primary key for table
+visitorID: returns list of users whove been here (same as userID)
+name: obvious
+restaurantCategory: the type of cuisine served here
+
+Favourites&History:
+super self explanatory
+
+
+List of dependencies:
+{Table1} --Primary Key --> {Table2}
+{user Table} ---tripId --> {userTrips Table}
+{userTrips Table} ---restaurantID --> {restaurantTable}
+{restaurantTable} --visitorID-> {user table}
+{userTable} ---userID--> {favouritesTable}
+{userTable} ---userId--> {historyTable}
+
+Example:
+user goes to a restaurant such as McDonalds. The DB will store the tripID (let say #1).
+The tripID will then correspond to one restaurant (Ex: McDonalds).
+the restaurant store its own ID, but also the customers that came (so it is reachable)
+Add this to the userHistory table
+if they like it we can add it to eh favouritesTable
