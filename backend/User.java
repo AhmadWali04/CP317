@@ -15,6 +15,7 @@ public class User{
     private String lastName;
     private String email;
     private String password;
+    private int tripID;
     //super the location somehow
     private ArrayList<String> favourites;
     private String searchHistory[]; //use an array because lets not store more than like 5 searches
@@ -25,13 +26,14 @@ public class User{
      * Contributed By: Ahmad W
      */
 
-    public User(int id, String firstName, String lastName, String email, String password, float radius,String[] searchHistory){
+    public User(int id, String firstName, String lastName, String email, String password, float radius,String[] searchHistory, int tripID){
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.password = password;
         this.searchHistory = searchHistory;
+        this.tripID = tripID;
         //creating the hashmap object:
         this.preferences = new HashMap<>();
         this.preferences.put("Price Range", null);
@@ -40,8 +42,8 @@ public class User{
     }
 
         //Overload Constructor for the User Database
-        public User(int id, String firstName, String lastName, String email, String password) {
-            this(id, firstName, lastName, email, password, 0.0f, new String[0]); // default values
+        public User(int id, String firstName, String lastName, String email, String password, int tripID) {
+            this(id, firstName, lastName, email, password, 0.0f, new String[0], tripID); // default values
         }
     
     
@@ -109,6 +111,10 @@ public class User{
         return this.id;
     }
 
+    public int getTripID(){
+        return this.tripID;
+    }
+
     public String getEmail(){
         return this.email;
     }
@@ -136,6 +142,10 @@ public class User{
     //setter methods:
     public void setID(int id){
         this.id = id;
+    }
+
+    public void setTripID(){
+        this.tripID = tripID;
     }
 
     public void setEmail(String email){
