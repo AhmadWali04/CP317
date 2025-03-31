@@ -2,18 +2,18 @@ package backend;
 import java.util.ArrayList;
 
 //should also implement the location class
-public class Resturaunt{
+public class Restaurant{
     private int id;
     private String name;
     private ArrayList<String> typesOfFood;
 
-    public Resturaunt(int id, String name,ArrayList<String> typesOfFoods){
+    public Restaurant(int id, String name,ArrayList<String> typesOfFoods){
         this.id = id;
         this.name = name;
         this.typesOfFood = typesOfFoods;
     }
 
-    public Resturaunt(int id, String name) {
+    public Restaurant(int id, String name) {
         this(id,name, new ArrayList<>());
     }
 
