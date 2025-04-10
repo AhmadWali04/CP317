@@ -1,1 +1,1 @@
-SELECT * FROM restaurant_view;
+SELECT * FROM restaurant_view; b
