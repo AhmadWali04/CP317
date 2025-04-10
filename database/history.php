@@ -1,7 +1,7 @@
 <?php
 include 'config.php';  
 
-// Check if the form was submitted (you can modify this to use an API or Ajax as well)
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Get the user ID and restaurant name from the form or POST data
     $userID = $_POST["userID"];
