@@ -5,3 +5,5 @@ CREATE TABLE favourites (
     FOREIGN KEY (userID) REFERENCES users(id),
     FOREIGN KEY (restaurant_name) REFERENCES restaurants(name)
 );
+
+l
